@@ -1,27 +1,10 @@
-package main
+package server
 
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"net"
 )
-
-func main() {
-	listener, err := net.Listen("tcp", "127.0.0.1:8900")
-	if err != nil {
-		log.Fatal(err)
-	}
-	go boardcaster()
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Print(err)
-			continue
-		}
-		go handleConn(conn)
-	}
-}
 
 type client chan<- string // 对外发送消息的通道
 var (
@@ -30,7 +13,7 @@ var (
 	message  = make(chan string)
 )
 
-func boardcaster() {
+func Boardcaster() {
 	clients := make(map[client]bool)
 
 	for {
@@ -48,9 +31,9 @@ func boardcaster() {
 	}
 }
 
-func handleConn(conn net.Conn) {
+func HandleConn(conn net.Conn) {
 	ch := make(chan string) //  发送客户消息的通道
-	go clientWriter(conn, ch)
+	go ClientWriter(conn, ch)
 
 	who := conn.RemoteAddr().String()
 	ch <- "You are " + who
@@ -66,7 +49,7 @@ func handleConn(conn net.Conn) {
 	conn.Close()
 }
 
-func clientWriter(conn net.Conn, ch <-chan string) {
+func ClientWriter(conn net.Conn, ch <-chan string) {
 	for msg := range ch {
 		fmt.Fprintln(conn, msg)
 	}
